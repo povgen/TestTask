@@ -5,8 +5,12 @@ For connecting this service with the web-server, I used rabbitMQ.
 
 It's making service scalable, because you can use a few instances of handler for file processing.
 
-Also, it's allow to get stable web service,
-because if one of part system will be reloaded state of the file will be saved.
+And it allow to processing big file, without risk of timeout Exception 
+and without loading main server
+
+Also, it allow to get stable web service,
+because if one of part system will be reloaded,
+task on file processing will be saved.
 
 P.S.: 
 - For working this services on separated machine, need to use NFS. 
