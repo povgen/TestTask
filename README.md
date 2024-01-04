@@ -4,9 +4,9 @@ Because, it's the most loaded part of the application.
 For connecting this service with the web-server, I used rabbitMQ.
 
 - It's making service scalable, because you can use a few instances of handler for file processing.
-- And it allow to processing big file, without risk of timeout Exception 
+- It allow to processing big file, without risk of timeout Exception 
 and without loading main server
-- Also, it allow to get stable web service,
+- It allow to get stable web service,
 because if one of part system will be reloaded,
 task on file processing will be saved.
 
