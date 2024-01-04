@@ -10,10 +10,11 @@
 		<base-card class="col-lg-7 col-md-8 col-sm-12 mt-4">
 			<template #header>
 				<div class="d-flex justify-content-between">
-					<div>Selected files: {{ selectedFilesString }}</div>
+					<div>Selected files: <span class="text-danger fs-5">{{ selectedFilesString }}</span></div>
 
 					<button class="btn btn-primary"
 							@click="sendFiles"
+							:disabled="selectedFiles.length === 0"
 							style="min-width: 90px"
 					>
 						Send files
@@ -37,13 +38,13 @@
 						<td class="text-end">
 							<button class="btn btn-success btn_download"
 									:disabled="!file.isCompleted"
-									@click="getFile(file)">
-
+									@click="getFile(file)"
+							>
 								Download
 							</button>
 							<button class="btn btn-danger mx-3"
 									:disabled="!file.isCompleted"
-									@click="deleteFile(index)"
+									@click="deleteFile(index, $event.target as HTMLButtonElement)"
 							>
 								Delete
 							</button>
@@ -94,9 +95,7 @@ export default defineComponent({
 		if (fileList) {
 			JSON.parse(fileList).forEach((el: FileInfo) => this.uploadedFiles.push(el))
 		}
-		if (this.uploadedFiles.length > 0 && !this.uploadedFiles[0].isCompleted) {
-			this.checkStatus(0)
-		}
+		this.checkStatus()
 	},
 	watch: {
 		uploadedFiles: {
@@ -133,14 +132,21 @@ export default defineComponent({
 				}
 				this.uploadedFiles.unshift(fileInfo)
 			})
-			setTimeout(this.checkStatus, 750, 0)
+			this.selectedFiles.splice(0);
+			setTimeout(this.checkStatus, 750)
 
 		},
 		async getFile(file: FileInfo) {
 			const res = await fetch(`/api/file?fileToken=${file.token}`)
 			downloadFile(await res.blob(), file.name.replace('html', 'pdf'))
 		},
-		async checkStatus(index: number) {
+		async checkStatus() {
+			const index = this.uploadedFiles.findIndex(el => !el.isCompleted)
+			console.log(index)
+			if (index < 0) {
+				return;
+			}
+			
 			const res = await fetch(`/api/file/status?fileToken=${this.uploadedFiles[index].token}`)
 
 			if (!res.ok) {
@@ -150,18 +156,18 @@ export default defineComponent({
 			const json = await res.json()
 
 			if (json.status !== 'completed') {
-				setTimeout(this.checkStatus, this.checkStatusesDelay, index)
+				setTimeout(this.checkStatus, this.checkStatusesDelay)
 				return
 			}
 
 			this.uploadedFiles[index].isCompleted = true
-			if (++index < this.uploadedFiles.length && !this.uploadedFiles[index].isCompleted) {
-				setTimeout(this.checkStatus, 10, index)
-			}
+			
+			setTimeout(this.checkStatus, 10)
 		},
 
 
-		async deleteFile(fileIndex: number) {
+		async deleteFile(fileIndex: number, btn: HTMLButtonElement) {
+			btn.disabled = true
 			const res = await fetch(`/api/file?fileToken=${this.uploadedFiles[fileIndex].token}`, {
 				method: 'DELETE'
 			})
@@ -171,6 +177,7 @@ export default defineComponent({
 			} else {
 				console.error(res)
 			}
+			btn.disabled = false
 
 		},
 	}
