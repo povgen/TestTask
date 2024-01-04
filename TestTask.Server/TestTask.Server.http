@@ -1,0 +1,7 @@
+
+###
+@Server_HostAddress = http://localhost:5276
+
+###
+POST {{Server_HostAddress}}/file
+Accept: application/json
