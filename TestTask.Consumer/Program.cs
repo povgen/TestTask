@@ -1,17 +1,36 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Text;
+﻿using System.Text;
 using PuppeteerSharp;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using TestTask.Consumer;
 
-var pathToPdfStorage = "Z:/Storage/GeneratedPdf";
-var pathToHtmlStorage = "Z:/Storage/UploadedHtml";
- 
-var factory = new ConnectionFactory()
+using var host = Host.CreateApplicationBuilder(args).Build();
+
+IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
+
+RabbitMQSettings settings = new();
+config.GetSection(nameof(RabbitMQSettings)).Bind(settings);
+
+var pathToStorage = config.GetValue<string>("PathToStorage") ??
+                    throw new Exception("PathToStorage is undefined in appsettings.json");
+
+
+var pathToPdfStorage = Path.Combine(pathToStorage, "GeneratedPdf");
+var pathToHtmlStorage = Path.Combine(pathToStorage, "UploadedHtml");
+
+Directory.CreateDirectory(pathToPdfStorage);
+
+var factory = new ConnectionFactory
 {
-    HostName = "127.0.0.1",
+    HostName = settings.Host,
 };
+if (settings.Port.HasValue)
+{
+    factory.Port = (int)settings.Port;
+}
 
 using var connection = factory.CreateConnection();
 using var channel = connection.CreateModel();
@@ -28,24 +47,11 @@ consumer.Received += async (model, es) =>
 {
     var body = es.Body.ToArray();
     var fileName = Encoding.UTF8.GetString(body);
-    Directory.CreateDirectory(pathToPdfStorage);
-    Console.WriteLine($"{pathToHtmlStorage}/{fileName}.html");
-    var reader = new StreamReader($"{pathToHtmlStorage}/{fileName}.html");
-    var text = reader.ReadToEnd();
-    reader.Close();
-    //
-            
-    await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
-    await using var page = await browser.NewPageAsync();
-    await page.SetContentAsync(text);
-    //
-    await page.PdfAsync($"{pathToPdfStorage}/{fileName}.pdf");
-    await page.CloseAsync();
-    await browser.CloseAsync();
 
-
+    Converter.convertHtmlToPdf($"{pathToHtmlStorage}/{fileName}.html", 
+        $"{pathToPdfStorage}/{fileName}.pdf");
 };
 
 channel.BasicConsume(queue: "task_queue", autoAck: true, consumer: consumer);
 
-Console.ReadKey();
+await host.RunAsync();
