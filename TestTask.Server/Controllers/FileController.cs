@@ -1,22 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TestTask.Consumer;
 using TestTask.Server.Services;
 
 namespace TestTask.Server.Controllers;
 
 [Route("[controller]")]
 [ApiController]
-public class FileController(IConfiguration configuration) : Controller
+public class FileController : Controller
 {
-    private readonly IStorage _storage = new Storage(configuration["StoragePath"] ??
-                                                     throw new Exception(
-                                                         "'StoragePath' key not found in appsettings.json"));
+    private readonly IStorage _storage;
 
-    private readonly long _maxSizeOfFiles = configuration.GetValue("MaxFilesSize", 10240 * 1024); // 10 mb 
+    private readonly long _maxSizeOfFiles; // 10 mb 
 
-    private readonly IPublisher _publisher = new Publisher(configuration["RabbitMQHost"] ??
-                                                           throw new Exception(
-                                                               "'RabbitMQHost' key not found in appsettings.json"),
-        configuration.GetValue<int?>("RabbitMQPort", null));
+    private readonly IPublisher _publisher;
+    public FileController(IConfiguration config)
+    {
+        RabbitMQSettings settings = new();
+        config.GetSection(nameof(RabbitMQSettings)).Bind(settings);
+
+        var pathToStorage = config.GetValue<string>("PathToStorage") ??
+                            throw new Exception("PathToStorage is undefined in appsettings.json");
+        
+        _storage = new Storage(pathToStorage);
+        _maxSizeOfFiles  = config.GetValue("MaxFilesSize", 10240 * 1024);
+
+        _publisher = new Publisher(settings);
+    }
+  
 
     private bool IsValidFiles(IEnumerable<IFormFile> files, out string error)
     {

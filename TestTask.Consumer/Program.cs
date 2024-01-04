@@ -9,7 +9,7 @@ using TestTask.Consumer;
 
 using var host = Host.CreateApplicationBuilder(args).Build();
 
-IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
+var config = host.Services.GetRequiredService<IConfiguration>();
 
 RabbitMQSettings settings = new();
 config.GetSection(nameof(RabbitMQSettings)).Bind(settings);

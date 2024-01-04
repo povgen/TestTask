@@ -1,19 +1,20 @@
 ﻿using System.Text;
 using RabbitMQ.Client;
+using TestTask.Consumer;
 
 namespace TestTask.Server.Services;
 
 public class Publisher: IPublisher
 {
-    private ConnectionFactory _factory;
-    public Publisher(string hostName, int? port)
+    private readonly ConnectionFactory _factory;
+    public Publisher(RabbitMQSettings settings)
     {
         _factory = new ConnectionFactory {
-            HostName = hostName
+            HostName = settings.Host
         };
-        if (port.HasValue)
+        if (settings.Port.HasValue)
         {
-            _factory.Port = (int)port;
+            _factory.Port = (int)settings.Port;
         }
     }
     public void AddToQueue(string fileToken)
