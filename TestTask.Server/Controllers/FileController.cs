@@ -8,13 +8,14 @@ namespace TestTask.Server.Controllers;
 public class FileController(IConfiguration configuration) : Controller
 {
     private readonly IStorage _storage = new Storage(configuration["StoragePath"] ??
-                                             throw new Exception("'StoragePath' key not found in appsettings.json"));
+                                                     throw new Exception(
+                                                         "'StoragePath' key not found in appsettings.json"));
 
     private readonly long _maxSizeOfFiles = configuration.GetValue("MaxFilesSize", 10240 * 1024); // 10 mb 
-    
+
     private readonly IPublisher _publisher = new Publisher(configuration["RabbitMQHost"] ??
-                                                          throw new Exception(
-                                                              "'RabbitMQHost' key not found in appsettings.json"),
+                                                           throw new Exception(
+                                                               "'RabbitMQHost' key not found in appsettings.json"),
         configuration.GetValue<int?>("RabbitMQPort", null));
 
     private bool IsValidFiles(IEnumerable<IFormFile> files, out string error)
@@ -42,6 +43,7 @@ public class FileController(IConfiguration configuration) : Controller
     {
         return $"GeneratedPdf/{fileToken}.pdf";
     }
+
     private string GetHtmlFilePath(string fileToken)
     {
         return $"UploadedHtml/{fileToken}.html";
@@ -56,11 +58,18 @@ public class FileController(IConfiguration configuration) : Controller
         }
 
         var fileTokens = new List<string>();
-        
+
         foreach (var file in files)
         {
             var fileToken = Path.GetRandomFileName().Replace('.', '_');
             _storage.SaveFile($"UploadedHtml/{fileToken}.html", file);
+            if (!_storage.IsFileExists($"UploadedHtml/{fileToken}.html"))
+            {
+                throw new Exception(
+                    "The file was not saved. Check the availability "
+                    + "of the directory specified in the \"Storage Path\"");
+            }
+
             fileTokens.Add(fileToken);
             _publisher.AddToQueue(fileToken);
         }
@@ -80,7 +89,7 @@ public class FileController(IConfiguration configuration) : Controller
         }
 
         var isExist = _storage.IsFileExists(GetPdfFilePath(fileToken));
-        
+
         return Ok(new
         {
             status = isExist ? "completed" : "processing"
@@ -95,11 +104,10 @@ public class FileController(IConfiguration configuration) : Controller
         {
             return BadRequest("File not found");
         }
-        
-        path = _storage.GetAbsoluteFilePath(path);
-        
-        return PhysicalFile(path, "application/pdf", "test.pdf");
 
+        path = _storage.GetAbsoluteFilePath(path);
+
+        return PhysicalFile(path, "application/pdf", "test.pdf");
     }
 
     [HttpDelete]
@@ -109,12 +117,13 @@ public class FileController(IConfiguration configuration) : Controller
         if (!_storage.IsFileExists(pdfPath))
         {
             return BadRequest("File not found");
-        };
-        
+        }
+
+        ;
+
         _storage.DeleteFile(pdfPath);
         _storage.DeleteFile(GetHtmlFilePath(fileToken));
 
         return Ok();
     }
-
 }
