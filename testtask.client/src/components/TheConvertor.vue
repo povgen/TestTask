@@ -142,7 +142,6 @@ export default defineComponent({
 		},
 		async checkStatus() {
 			const index = this.uploadedFiles.findIndex(el => !el.isCompleted)
-			console.log(index)
 			if (index < 0) {
 				return;
 			}

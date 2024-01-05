@@ -12,7 +12,7 @@ public static class Converter
     /// <remarks>
     /// Generating a pdf is currently only supported in Chrome headless.
     /// </remarks>
-    public static async void convertHtmlToPdf(string htmlFilePath, string pdfFilePath)
+    public static async void ConvertHtmlToPdf(string htmlFilePath, string pdfFilePath)
     {
         var reader = new StreamReader(htmlFilePath);
         var text = await reader.ReadToEndAsync();

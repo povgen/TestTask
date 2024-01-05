@@ -48,7 +48,7 @@ consumer.Received += async (model, es) =>
     var body = es.Body.ToArray();
     var fileName = Encoding.UTF8.GetString(body);
 
-    Converter.convertHtmlToPdf($"{pathToHtmlStorage}/{fileName}.html", 
+    Converter.ConvertHtmlToPdf($"{pathToHtmlStorage}/{fileName}.html", 
         $"{pathToPdfStorage}/{fileName}.pdf");
 };
 
