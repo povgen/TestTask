@@ -82,7 +82,7 @@ export default defineComponent({
 			selectedFiles: [] as FileItem[],
 			uploadedFiles: [] as FileInfo[],
 
-			checkStatusesDelay: 2000
+			checkStatusesDelay: 3000
 		}
 	},
 	computed: {

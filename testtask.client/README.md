@@ -12,6 +12,10 @@ create .env file from .env.example file and set address to backend
 npm run dev
 ```
 
+#### 4) if some broke, and will be necessary to clear file list on client
+just put to JS console in web tools 'localStorage.clear()' and reload page
+
+
 
 ## Some commands
 
