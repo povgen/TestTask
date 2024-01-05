@@ -22,6 +22,8 @@ var pathToPdfStorage = Path.Combine(pathToStorage, "GeneratedPdf");
 var pathToHtmlStorage = Path.Combine(pathToStorage, "UploadedHtml");
 
 Directory.CreateDirectory(pathToPdfStorage);
+using var browserFetcher = new BrowserFetcher();
+await browserFetcher.DownloadAsync();
 
 var factory = new ConnectionFactory
 {
