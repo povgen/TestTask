@@ -1,4 +1,10 @@
-﻿I decided to detach processing html files to separate the service.
+﻿### Getting Started
+
+1) testtask.client/README.md
+2) TestTask.Server/README.md
+3) TestTask.Consumer/README.md
+
+I decided to detach processing html files to separate the service.
 Because, it's the most loaded part of the application.
 
 For connecting this service with the web-server, I used rabbitMQ.
